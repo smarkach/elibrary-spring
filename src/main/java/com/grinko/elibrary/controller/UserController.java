@@ -2,10 +2,10 @@ package com.grinko.elibrary.controller;
 
 import com.grinko.elibrary.entity.User;
 import com.grinko.elibrary.service.UserService;
-import com.grinko.elibrary.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -26,6 +26,9 @@ public class UserController {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
+    private MessageSource messageSource;
+
+    @Autowired
     private UserService userService;
 
 
@@ -39,12 +42,13 @@ public class UserController {
      */
     @PostMapping("/")
     public ResponseEntity<?> createUser(@RequestBody User user, Locale locale) {
-        LOGGER.info("Creating user: {}.", user);
+        LOGGER.info(messageSource.getMessage("controller.log.user.creating", new Object[]{user}, locale));
         try {
             userService.save(user, locale);
             return new ResponseEntity<>(user, HttpStatus.CREATED);
         } catch (EntityExistsException e) {
-            LOGGER.error("Unable to create user. {}", e.getMessage());
+            LOGGER.error(messageSource.getMessage("controller.log.user.creating-unable",
+                    new Object[]{e.getMessage()}, locale));
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         }
     }
@@ -58,12 +62,13 @@ public class UserController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable("id") Long id, Locale locale) {
-        LOGGER.info("Fetching user with ID {}.", id);
+        LOGGER.info(messageSource.getMessage("controller.log.user.fetching", new Object[]{id}, locale));
         try {
             User user = userService.find(id, locale);
             return new ResponseEntity<>(user, HttpStatus.OK);
         } catch (EntityNotFoundException e) {
-            LOGGER.error("User with ID {} not found. {}", id, e.getMessage());
+            LOGGER.error(messageSource.getMessage("controller.log.user.not-found",
+                    new Object[]{id, e.getMessage()}, locale));
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
@@ -75,8 +80,8 @@ public class UserController {
      * all users, or with status 204 (No Content).
      */
     @GetMapping("/")
-    public ResponseEntity<?> getAllUsers() {
-        LOGGER.info("Fetching all users.");
+    public ResponseEntity<?> getAllUsers(Locale locale) {
+        LOGGER.info(messageSource.getMessage("controller.log.user.fetching-all", null, locale));
         List<User> users = userService.findAll();
         if (users.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -94,12 +99,12 @@ public class UserController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePost(@PathVariable("id") Long id, Locale locale) {
-        LOGGER.info("Deleting user with ID {}.", id);
+        LOGGER.info(messageSource.getMessage("controller.log.user.deleting", new Object[]{id}, locale));
         try {
             userService.delete(id, locale);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (EntityNotFoundException e) {
-            LOGGER.error("Unable to delete. {}", e.getMessage());
+            LOGGER.error(messageSource.getMessage("controller.log.user.deleting-unable", null, locale));
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }

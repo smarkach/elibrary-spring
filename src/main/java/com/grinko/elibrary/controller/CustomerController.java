@@ -5,11 +5,11 @@ import com.grinko.elibrary.service.CustomerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.LocaleResolver;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
@@ -26,6 +26,9 @@ public class CustomerController {
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomerController.class);
 
     @Autowired
+    private MessageSource messageSource;
+
+    @Autowired
     private CustomerService customerService;
 
 
@@ -39,12 +42,13 @@ public class CustomerController {
      */
     @PostMapping("/")
     public ResponseEntity<?> createCustomer(@RequestBody Customer customer, Locale locale) {
-        LOGGER.info("Creating customer: {}.", customer);
+        LOGGER.info(messageSource.getMessage("controller.log.customer.creating", new Object[]{customer}, locale));
         try {
             customerService.save(customer, locale);
             return new ResponseEntity<>(customer, HttpStatus.CREATED);
         } catch (EntityExistsException e) {
-            LOGGER.error("Unable to create customer. {}", e.getMessage());
+            LOGGER.error(messageSource.getMessage("controller.log.customer.creating-unable",
+                    new Object[]{e.getMessage()}, locale));
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         }
     }
@@ -58,12 +62,13 @@ public class CustomerController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getCustomerById(@PathVariable("id") Long id, Locale locale) {
-        LOGGER.info("Fetching customer with ID {}.", id);
+        LOGGER.info(messageSource.getMessage("controller.log.customer.fetching", new Object[]{id}, locale));
         try {
             Customer customer = customerService.find(id, locale);
             return new ResponseEntity<>(customer, HttpStatus.OK);
         } catch (EntityNotFoundException e) {
-            LOGGER.error("Customer with ID {} not found. {}", id, e.getMessage());
+            LOGGER.error(messageSource.getMessage("controller.log.customer.not-found",
+                    new Object[]{id, e.getMessage()}, locale));
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
@@ -75,8 +80,8 @@ public class CustomerController {
      * all customers, or with status 204 (No Content).
      */
     @GetMapping("/")
-    public ResponseEntity<?> getAllCustomers() {
-        LOGGER.info("Fetching all customers.");
+    public ResponseEntity<?> getAllCustomers(Locale locale) {
+        LOGGER.info(messageSource.getMessage("controller.log.customer.fetching-all", null, locale));
         List<Customer> customers = customerService.findAll();
         if (customers.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -94,12 +99,12 @@ public class CustomerController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePost(@PathVariable("id") Long id, Locale locale) {
-        LOGGER.info("Deleting customer with ID {}.", id);
+        LOGGER.info(messageSource.getMessage("controller.log.customer.deleting", new Object[]{id}, locale));
         try {
             customerService.delete(id, locale);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (EntityNotFoundException e) {
-            LOGGER.error("Unable to delete. {}", e.getMessage());
+            LOGGER.error(messageSource.getMessage("controller.log.customer.deleting-unable", null, locale));
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
